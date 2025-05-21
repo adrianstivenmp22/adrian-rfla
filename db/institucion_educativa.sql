@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 21-05-2025 a las 01:38:44
--- Versión del servidor: 10.4.28-MariaDB
--- Versión de PHP: 8.0.28
+-- Host: localhost
+-- Generation Time: May 21, 2025 at 05:06 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,12 +18,12 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `institucion_educativa`
+-- Database: `institucion_educativa`
 --
 
 DELIMITER $$
 --
--- Funciones
+-- Functions
 --
 CREATE DEFINER=`root`@`localhost` FUNCTION `nombre_completo` (`uid` INT) RETURNS VARCHAR(150) CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
     DECLARE completo VARCHAR(150);
@@ -31,12 +31,20 @@ CREATE DEFINER=`root`@`localhost` FUNCTION `nombre_completo` (`uid` INT) RETURNS
     RETURN completo;
 END$$
 
+CREATE DEFINER=`root`@`localhost` FUNCTION `obtener_nombre_completo` (`id` INT) RETURNS VARCHAR(511) CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
+  DECLARE nombre_completo VARCHAR(511);
+  SELECT CONCAT(nombre, ' ', apellido) INTO nombre_completo
+  FROM Usuarios
+  WHERE id_usuario = id;
+  RETURN nombre_completo;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `areasinstitucion`
+-- Table structure for table `areasinstitucion`
 --
 
 CREATE TABLE `areasinstitucion` (
@@ -48,7 +56,7 @@ CREATE TABLE `areasinstitucion` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `auditoria`
+-- Table structure for table `auditoria`
 --
 
 CREATE TABLE `auditoria` (
@@ -61,7 +69,7 @@ CREATE TABLE `auditoria` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Volcado de datos para la tabla `auditoria`
+-- Dumping data for table `auditoria`
 --
 
 INSERT INTO `auditoria` (`id_auditoria`, `usuario_afectado`, `operacion`, `descripcion`, `fecha_operacion`, `usuario_realiza_operacion`) VALUES
@@ -70,7 +78,7 @@ INSERT INTO `auditoria` (`id_auditoria`, `usuario_afectado`, `operacion`, `descr
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `cursos`
+-- Table structure for table `cursos`
 --
 
 CREATE TABLE `cursos` (
@@ -82,7 +90,7 @@ CREATE TABLE `cursos` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `docentecurso`
+-- Table structure for table `docentecurso`
 --
 
 CREATE TABLE `docentecurso` (
@@ -94,7 +102,7 @@ CREATE TABLE `docentecurso` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `equipostecnologicos`
+-- Table structure for table `equipostecnologicos`
 --
 
 CREATE TABLE `equipostecnologicos` (
@@ -110,7 +118,7 @@ CREATE TABLE `equipostecnologicos` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `eventos`
+-- Table structure for table `eventos`
 --
 
 CREATE TABLE `eventos` (
@@ -124,7 +132,7 @@ CREATE TABLE `eventos` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `inscripciones`
+-- Table structure for table `inscripciones`
 --
 
 CREATE TABLE `inscripciones` (
@@ -137,7 +145,7 @@ CREATE TABLE `inscripciones` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `notas`
+-- Table structure for table `notas`
 --
 
 CREATE TABLE `notas` (
@@ -151,7 +159,7 @@ CREATE TABLE `notas` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `personaladministrativo`
+-- Table structure for table `personaladministrativo`
 --
 
 CREATE TABLE `personaladministrativo` (
@@ -164,7 +172,7 @@ CREATE TABLE `personaladministrativo` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `programas`
+-- Table structure for table `programas`
 --
 
 CREATE TABLE `programas` (
@@ -177,7 +185,7 @@ CREATE TABLE `programas` (
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `usuarios`
+-- Table structure for table `usuarios`
 --
 
 CREATE TABLE `usuarios` (
@@ -197,41 +205,20 @@ CREATE TABLE `usuarios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Volcado de datos para la tabla `usuarios`
+-- Dumping data for table `usuarios`
 --
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre`, `apellido`, `documento_identidad`, `tipo_usuario`, `email`, `contrasena`, `telefono`, `direccion`, `estado`, `intentos_fallidos`, `tiempo_bloqueo`, `fecha_registro`) VALUES
-(1, 'adrian stiven ', 'murillo palacios', '1078457695', 'administrador', 'adrianstivenm@admin.com', '$2y$10$z.HEydkvNOUqec5B3ji09eLuERVqbuuOag2LKLrftevm5iTtACLt2', '3126650806', 'jardin x la 18', 'activo', 0, NULL, '2025-05-19 05:41:17');
-
---
--- Disparadores `usuarios`
---
-DELIMITER $$
-CREATE TRIGGER `trg_usuario_delete` BEFORE DELETE ON `usuarios` FOR EACH ROW BEGIN
-    INSERT INTO Auditoria (usuario_afectado, operacion, descripcion, usuario_realiza_operacion)
-    VALUES (OLD.id_usuario, 'DELETE', 'Usuario eliminado', OLD.id_usuario);
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `trg_usuario_insert` AFTER INSERT ON `usuarios` FOR EACH ROW BEGIN
-    INSERT INTO Auditoria (usuario_afectado, operacion, descripcion, usuario_realiza_operacion)
-    VALUES (NEW.id_usuario, 'INSERT', 'Nuevo usuario registrado', NEW.id_usuario);
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `trg_usuario_update` AFTER UPDATE ON `usuarios` FOR EACH ROW BEGIN
-    INSERT INTO Auditoria (usuario_afectado, operacion, descripcion, usuario_realiza_operacion)
-    VALUES (NEW.id_usuario, 'UPDATE', 'Usuario actualizado', NEW.id_usuario);
-END
-$$
-DELIMITER ;
+(1, 'adrian stiven ', 'murillo palacios', '1078457695', 'administrador', 'adrianstivenm@admin.com', '$2y$10$7Of6.poggzdEwRMpv1r9Z.px7UTgfz0yQfphD/PxsunEfteFXiqNa', '3126650806', 'jardin x la 18', 'activo', 0, NULL, '2025-05-19 05:41:17'),
+(5, 'Deiner David', 'Bello González', '1077430750', 'estudiante', 'deinerb2.0.0.5@gmail.com', '$2y$10$Gd2Z/T7qBr1.VroxzUzAEOJx3G0e.gCt9r4GO0sn0JdSE3nD1eMiS', '3147813608', 'Carrera 8', 'activo', 0, NULL, '2025-05-21 02:37:25'),
+(6, 'Adrian', 'Pancho', '1078457693', 'estudiante', 'pedro@gmail.com', '$2y$10$1vd.puLwWs5fvwIxxd0DI.qPxXBfXQR.Tz./LPNOnA3vBSp1E0Kkq', '', '', 'activo', 0, NULL, '2025-05-21 02:48:24'),
+(10, 'Alcachofas', 'News', '1077430759', 'estudiante', 'deinerbello@gmail.com', '$2y$10$CA/9eYG0tH9siNx.5aXg6uApwFpKy53rM/kYkU4CNISazbQLxXeIa', '', '', 'activo', 0, NULL, '2025-05-21 03:01:48'),
+(11, 'oswall', 'murillo', '1180370422', 'docente', 'oswallyassir@docente.com', '$2y$10$858cp6TxYJlCOR8c.rqS4uVy1IE0FrNRZnwMT640xuv1qsiHI55Jy', '312654789', 'calle22 mentira18', 'activo', 0, NULL, '2025-05-21 03:04:24');
 
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `usuariosbloqueados`
+-- Table structure for table `usuariosbloqueados`
 --
 
 CREATE TABLE `usuariosbloqueados` (
@@ -244,8 +231,8 @@ CREATE TABLE `usuariosbloqueados` (
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `vista_auditoria`
--- (Véase abajo para la vista actual)
+-- Stand-in structure for view `vista_auditoria`
+-- (See below for the actual view)
 --
 CREATE TABLE `vista_auditoria` (
 `id_auditoria` int(11)
@@ -260,8 +247,8 @@ CREATE TABLE `vista_auditoria` (
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `vista_equipos_por_area`
--- (Véase abajo para la vista actual)
+-- Stand-in structure for view `vista_equipos_por_area`
+-- (See below for the actual view)
 --
 CREATE TABLE `vista_equipos_por_area` (
 `nombre_area` varchar(100)
@@ -274,8 +261,8 @@ CREATE TABLE `vista_equipos_por_area` (
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `vista_estudiantes_activos`
--- (Véase abajo para la vista actual)
+-- Stand-in structure for view `vista_estudiantes_activos`
+-- (See below for the actual view)
 --
 CREATE TABLE `vista_estudiantes_activos` (
 `id_usuario` int(11)
@@ -296,8 +283,8 @@ CREATE TABLE `vista_estudiantes_activos` (
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `vista_inscripciones`
--- (Véase abajo para la vista actual)
+-- Stand-in structure for view `vista_inscripciones`
+-- (See below for the actual view)
 --
 CREATE TABLE `vista_inscripciones` (
 `nombre` varchar(50)
@@ -309,8 +296,8 @@ CREATE TABLE `vista_inscripciones` (
 -- --------------------------------------------------------
 
 --
--- Estructura Stand-in para la vista `vista_usuarios_bloqueados`
--- (Véase abajo para la vista actual)
+-- Stand-in structure for view `vista_usuarios_bloqueados`
+-- (See below for the actual view)
 --
 CREATE TABLE `vista_usuarios_bloqueados` (
 `id_bloqueo` int(11)
@@ -324,7 +311,7 @@ CREATE TABLE `vista_usuarios_bloqueados` (
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `vista_auditoria`
+-- Structure for view `vista_auditoria`
 --
 DROP TABLE IF EXISTS `vista_auditoria`;
 
@@ -333,7 +320,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `vista_equipos_por_area`
+-- Structure for view `vista_equipos_por_area`
 --
 DROP TABLE IF EXISTS `vista_equipos_por_area`;
 
@@ -342,7 +329,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `vista_estudiantes_activos`
+-- Structure for view `vista_estudiantes_activos`
 --
 DROP TABLE IF EXISTS `vista_estudiantes_activos`;
 
@@ -351,7 +338,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `vista_inscripciones`
+-- Structure for view `vista_inscripciones`
 --
 DROP TABLE IF EXISTS `vista_inscripciones`;
 
@@ -360,24 +347,24 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
--- Estructura para la vista `vista_usuarios_bloqueados`
+-- Structure for view `vista_usuarios_bloqueados`
 --
 DROP TABLE IF EXISTS `vista_usuarios_bloqueados`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_usuarios_bloqueados`  AS SELECT `ub`.`id_bloqueo` AS `id_bloqueo`, `ub`.`id_usuario` AS `id_usuario`, `ub`.`razon_bloqueo` AS `razon_bloqueo`, `ub`.`fecha_bloqueo` AS `fecha_bloqueo`, `u`.`nombre` AS `nombre`, `u`.`apellido` AS `apellido` FROM (`usuariosbloqueados` `ub` join `usuarios` `u` on(`ub`.`id_usuario` = `u`.`id_usuario`)) ;
 
 --
--- Índices para tablas volcadas
+-- Indexes for dumped tables
 --
 
 --
--- Indices de la tabla `areasinstitucion`
+-- Indexes for table `areasinstitucion`
 --
 ALTER TABLE `areasinstitucion`
   ADD PRIMARY KEY (`id_area`);
 
 --
--- Indices de la tabla `auditoria`
+-- Indexes for table `auditoria`
 --
 ALTER TABLE `auditoria`
   ADD PRIMARY KEY (`id_auditoria`),
@@ -385,14 +372,14 @@ ALTER TABLE `auditoria`
   ADD KEY `usuario_realiza_operacion` (`usuario_realiza_operacion`);
 
 --
--- Indices de la tabla `cursos`
+-- Indexes for table `cursos`
 --
 ALTER TABLE `cursos`
   ADD PRIMARY KEY (`id_curso`),
   ADD KEY `id_programa` (`id_programa`);
 
 --
--- Indices de la tabla `docentecurso`
+-- Indexes for table `docentecurso`
 --
 ALTER TABLE `docentecurso`
   ADD PRIMARY KEY (`id_docente_curso`),
@@ -400,20 +387,20 @@ ALTER TABLE `docentecurso`
   ADD KEY `id_curso` (`id_curso`);
 
 --
--- Indices de la tabla `equipostecnologicos`
+-- Indexes for table `equipostecnologicos`
 --
 ALTER TABLE `equipostecnologicos`
   ADD PRIMARY KEY (`id_equipo`),
   ADD KEY `id_area` (`id_area`);
 
 --
--- Indices de la tabla `eventos`
+-- Indexes for table `eventos`
 --
 ALTER TABLE `eventos`
   ADD PRIMARY KEY (`id_evento`);
 
 --
--- Indices de la tabla `inscripciones`
+-- Indexes for table `inscripciones`
 --
 ALTER TABLE `inscripciones`
   ADD PRIMARY KEY (`id_inscripcion`),
@@ -421,7 +408,7 @@ ALTER TABLE `inscripciones`
   ADD KEY `id_curso` (`id_curso`);
 
 --
--- Indices de la tabla `notas`
+-- Indexes for table `notas`
 --
 ALTER TABLE `notas`
   ADD PRIMARY KEY (`id_nota`),
@@ -429,163 +416,172 @@ ALTER TABLE `notas`
   ADD KEY `id_curso` (`id_curso`);
 
 --
--- Indices de la tabla `personaladministrativo`
+-- Indexes for table `personaladministrativo`
 --
 ALTER TABLE `personaladministrativo`
   ADD PRIMARY KEY (`id_personal`),
   ADD KEY `id_usuario` (`id_usuario`);
 
 --
--- Indices de la tabla `programas`
+-- Indexes for table `programas`
 --
 ALTER TABLE `programas`
   ADD PRIMARY KEY (`id_programa`);
 
 --
--- Indices de la tabla `usuarios`
+-- Indexes for table `usuarios`
 --
 ALTER TABLE `usuarios`
   ADD PRIMARY KEY (`id_usuario`),
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- Indices de la tabla `usuariosbloqueados`
+-- Indexes for table `usuariosbloqueados`
 --
 ALTER TABLE `usuariosbloqueados`
   ADD PRIMARY KEY (`id_bloqueo`),
   ADD KEY `id_usuario` (`id_usuario`);
 
 --
--- AUTO_INCREMENT de las tablas volcadas
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT de la tabla `areasinstitucion`
+-- AUTO_INCREMENT for table `areasinstitucion`
 --
 ALTER TABLE `areasinstitucion`
   MODIFY `id_area` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `auditoria`
+-- AUTO_INCREMENT for table `auditoria`
 --
 ALTER TABLE `auditoria`
   MODIFY `id_auditoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT de la tabla `cursos`
+-- AUTO_INCREMENT for table `cursos`
 --
 ALTER TABLE `cursos`
   MODIFY `id_curso` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `docentecurso`
+-- AUTO_INCREMENT for table `docentecurso`
 --
 ALTER TABLE `docentecurso`
   MODIFY `id_docente_curso` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `equipostecnologicos`
+-- AUTO_INCREMENT for table `equipostecnologicos`
 --
 ALTER TABLE `equipostecnologicos`
   MODIFY `id_equipo` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `eventos`
+-- AUTO_INCREMENT for table `eventos`
 --
 ALTER TABLE `eventos`
   MODIFY `id_evento` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `inscripciones`
+-- AUTO_INCREMENT for table `inscripciones`
 --
 ALTER TABLE `inscripciones`
   MODIFY `id_inscripcion` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `notas`
+-- AUTO_INCREMENT for table `notas`
 --
 ALTER TABLE `notas`
   MODIFY `id_nota` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `personaladministrativo`
+-- AUTO_INCREMENT for table `personaladministrativo`
 --
 ALTER TABLE `personaladministrativo`
   MODIFY `id_personal` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `programas`
+-- AUTO_INCREMENT for table `programas`
 --
 ALTER TABLE `programas`
   MODIFY `id_programa` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `usuarios`
+-- AUTO_INCREMENT for table `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
--- AUTO_INCREMENT de la tabla `usuariosbloqueados`
+-- AUTO_INCREMENT for table `usuariosbloqueados`
 --
 ALTER TABLE `usuariosbloqueados`
   MODIFY `id_bloqueo` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- Restricciones para tablas volcadas
+-- Constraints for dumped tables
 --
 
 --
--- Filtros para la tabla `auditoria`
+-- Constraints for table `auditoria`
 --
 ALTER TABLE `auditoria`
   ADD CONSTRAINT `auditoria_ibfk_1` FOREIGN KEY (`usuario_afectado`) REFERENCES `usuarios` (`id_usuario`),
   ADD CONSTRAINT `auditoria_ibfk_2` FOREIGN KEY (`usuario_realiza_operacion`) REFERENCES `usuarios` (`id_usuario`);
 
 --
--- Filtros para la tabla `cursos`
+-- Constraints for table `cursos`
 --
 ALTER TABLE `cursos`
   ADD CONSTRAINT `cursos_ibfk_1` FOREIGN KEY (`id_programa`) REFERENCES `programas` (`id_programa`);
 
 --
--- Filtros para la tabla `docentecurso`
+-- Constraints for table `docentecurso`
 --
 ALTER TABLE `docentecurso`
   ADD CONSTRAINT `docentecurso_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
   ADD CONSTRAINT `docentecurso_ibfk_2` FOREIGN KEY (`id_curso`) REFERENCES `cursos` (`id_curso`);
 
 --
--- Filtros para la tabla `equipostecnologicos`
+-- Constraints for table `equipostecnologicos`
 --
 ALTER TABLE `equipostecnologicos`
   ADD CONSTRAINT `equipostecnologicos_ibfk_1` FOREIGN KEY (`id_area`) REFERENCES `areasinstitucion` (`id_area`);
 
 --
--- Filtros para la tabla `inscripciones`
+-- Constraints for table `inscripciones`
 --
 ALTER TABLE `inscripciones`
   ADD CONSTRAINT `inscripciones_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
   ADD CONSTRAINT `inscripciones_ibfk_2` FOREIGN KEY (`id_curso`) REFERENCES `cursos` (`id_curso`);
 
 --
--- Filtros para la tabla `notas`
+-- Constraints for table `notas`
 --
 ALTER TABLE `notas`
   ADD CONSTRAINT `notas_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
   ADD CONSTRAINT `notas_ibfk_2` FOREIGN KEY (`id_curso`) REFERENCES `cursos` (`id_curso`);
 
 --
--- Filtros para la tabla `personaladministrativo`
+-- Constraints for table `personaladministrativo`
 --
 ALTER TABLE `personaladministrativo`
   ADD CONSTRAINT `personaladministrativo_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`);
 
 --
--- Filtros para la tabla `usuariosbloqueados`
+-- Constraints for table `usuariosbloqueados`
 --
 ALTER TABLE `usuariosbloqueados`
   ADD CONSTRAINT `usuariosbloqueados_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`);
+
+DELIMITER $$
+--
+-- Events
+--
+CREATE DEFINER=`root`@`localhost` EVENT `desbloquear_usuarios` ON SCHEDULE EVERY 1 MINUTE STARTS '2025-05-05 09:43:24' ON COMPLETION NOT PRESERVE ENABLE DO DELETE FROM UsuariosBloqueados
+  WHERE TIMESTAMPDIFF(MINUTE, fecha_bloqueo, NOW()) >= 3$$
+
+DELIMITER ;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
