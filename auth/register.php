@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nombre       = trim($_POST['nombre']);
     $apellido     = trim($_POST['apellido']);
-    $documento    = trim($_POST['documento']);
+    $documento    = trim($_POST['documento']); // Este será el nuevo id_usuario
     $tipo_usuario = isset($_POST['tipo_usuario']) && in_array($_POST['tipo_usuario'], ['administrador','docente','estudiante'])
                     ? $_POST['tipo_usuario']
                     : 'estudiante';
@@ -18,9 +18,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $direccion    = trim($_POST['direccion']);
     $estado       = 'activo';
 
-    // Validación de documento
-    if (!preg_match('/^\d{10}$/', $documento)) {
-        $mensaje = "El documento debe ser numérico y tener exactamente 10 dígitos.";
+    // Validación de documento (DNI colombiano: 8 o 10 dígitos)
+    if (!preg_match('/^\d{8}$|^\d{10}$/', $documento)) {
+        $mensaje = "El documento debe ser numérico y tener 8 o 10 dígitos.";
+        $tipo    = "error";
+    } elseif (strlen($documento) == 10 && intval($documento) < 1000000000) {
+        // Si tiene 10 dígitos, debe empezar desde 1.000.000.000 (NUIP)
+        $mensaje = "El documento de 10 dígitos debe iniciar desde 1.000.000.000 (NUIP).";
         $tipo    = "error";
     } else {
         // Validar único administrador
@@ -28,38 +32,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE tipo_usuario = 'administrador'");
             $total = $stmt->fetchColumn();
             if ($total > 0) {
-                header("Location: register.php?mensaje=Ya existe un administrador registrado.&tipo=error");
-                exit;
+                $mensaje = "Ya existe un administrador registrado.";
+                $tipo    = "error";
             }
         }
+        // Validar documento duplicado
+        if (empty($mensaje)) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM usuarios WHERE id_usuario = ?");
+            $stmt->execute([$documento]);
+            if ($stmt->fetchColumn() > 0) {
+                $mensaje = "El documento ya está registrado.";
+                $tipo    = "error";
+            }
+        }
+        // Validar email duplicado
+        if (empty($mensaje)) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM usuarios WHERE email = ?");
+            $stmt->execute([$email]);
+            if ($stmt->fetchColumn() > 0) {
+                $mensaje = "El correo electrónico ya está registrado.";
+                $tipo    = "error";
+            }
+        }
+        // Si no hay errores, registrar usuario
+        if (empty($mensaje)) {
+            $hashed = password_hash($passwordRaw, PASSWORD_DEFAULT);
+            $sql = "INSERT INTO usuarios
+                      (id_usuario, nombre, apellido, tipo_usuario,
+                       email, contrasena, telefono, direccion, estado)
+                    VALUES
+                      (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            $ok = $stmt->execute([
+                $documento, // id_usuario
+                $nombre,
+                $apellido,
+                $tipo_usuario,
+                $email,
+                $hashed,
+                $telefono,
+                $direccion,
+                $estado
+            ]);
 
-        // Insertar usuario
-        $hashed = password_hash($passwordRaw, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO usuarios
-                  (nombre, apellido, documento_identidad, tipo_usuario,
-                   email, contrasena, telefono, direccion, estado)
-                VALUES
-                  (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $pdo->prepare($sql);
-        $ok = $stmt->execute([
-            $nombre,
-            $apellido,
-            $documento,
-            $tipo_usuario,
-            $email,
-            $hashed,
-            $telefono,
-            $direccion,
-            $estado
-        ]);
-
-        if ($ok) {
-            $mensaje = "¡Registro exitoso! Bienvenido al sistema escolar.";
-            $tipo    = "success";
-        } else {
-            $errorInfo = $stmt->errorInfo();
-            $mensaje   = "Error: No se pudo completar el registro. ({$errorInfo[2]})";
-            $tipo      = "error";
+            if ($ok) {
+                $mensaje = "¡Registro exitoso! Bienvenido al sistema escolar.";
+                $tipo    = "success";
+            } else {
+                $errorInfo = $stmt->errorInfo();
+                $mensaje   = "Error: No se pudo completar el registro. ({$errorInfo[2]})";
+                $tipo      = "error";
+            }
         }
     }
 }

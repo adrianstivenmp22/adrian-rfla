@@ -39,7 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id']   = $user['id'];
             $_SESSION['user_name'] = $user['nombre'];
             $_SESSION['user_role'] = $user['tipo_usuario'];
-            header('Location: ../dashboard/inicio.php');
+            // Redirección según el tipo de usuario
+            if ($user['tipo_usuario'] === 'administrador') {
+                header('Location: ../dashboard/dashboard_admin.php');
+            } elseif ($user['tipo_usuario'] === 'docente') {
+                header('Location: ../dashboard/dashboard_docente.php');
+            } else {
+                header('Location: ../dashboard/dashboard_estudiante.php');
+            }
             exit;
         } else {
             $error = 'Credenciales incorrectas. Por favor, inténtalo de nuevo.';

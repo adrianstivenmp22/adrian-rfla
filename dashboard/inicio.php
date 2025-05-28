@@ -1,6 +1,6 @@
 <?php
 session_start();
-if (empty($_SESSION['user_id'])) {
+if (empty($_SESSION['user_id']) || $_SESSION['user_role'] !== 'administrador') {
     header('Location: ../auth/login.php');
     exit;
 }
@@ -405,7 +405,7 @@ if (empty($_SESSION['user_id'])) {
                             <div class="space-y-4">
                                 <div class="flex items-start p-3 hover:bg-gray-50 rounded-lg transition">
                                     <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg mr-4">
-                                        <i class="fas fa-calendar-day text-lg"></i>
+                                        <i class="fas
                                     </div>
                                     <div class="flex-1">
                                         <h4 class="font-medium">Reunión de padres</h4>
